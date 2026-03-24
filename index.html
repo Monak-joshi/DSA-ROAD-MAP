@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DSA Tracker – Master the Algorithms</title>
+    <meta name="description" content="A premium DSA problem tracker with structured categories and progress monitoring.">
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- React & Babel CDNs -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        :root {
+            --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+            
+            /* Dark Mode Theme (Premium) */
+            --color-background-primary: #0a0a0c;
+            --color-background-secondary: #141416;
+            --color-background-tertiary: #1f1f23;
+            
+            --color-text-primary: #f4f4f5;
+            --color-text-secondary: #a1a1aa;
+            --color-text-tertiary: #71717a;
+            
+            --color-border-primary: #27272a;
+            --color-border-secondary: #3f3f46;
+            --color-border-tertiary: #27272a;
+            
+            --border-radius-md: 8px;
+            --border-radius-lg: 12px;
+            
+            --color-background-success: #064e3b;
+            --color-text-success: #34d399;
+            
+            --color-background-warning: #451a03;
+            --color-text-warning: #fbbf24;
+            
+            --color-background-danger: #450a0a;
+            --color-text-danger: #f87171;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: var(--color-background-primary);
+            color: var(--color-text-primary);
+            font-family: var(--font-sans);
+            height: 100vh;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        #root {
+            height: 100%;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--color-background-tertiary);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--color-border-secondary);
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        /* Transitions */
+        button, input {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useCallback, useMemo } = React;
+
+        const CATS = [
+          { id:"array", label:"Arrays", color:"#178EDD", sub:[
+            { id:"sw-fixed", label:"Sliding Window – Fixed Size", probs:[
+              {id:"643",t:"Maximum Average Subarray I",n:643,d:"E"},
+              {id:"2461",t:"Max Sum of Distinct Subarrays with Length K",n:2461,d:"M"},
+              {id:"438",t:"Find All Anagrams in a String",n:438,d:"M"},
+              {id:"567",t:"Permutation in String",n:567,d:"M"},
+            ]},
+            { id:"sw-var", label:"Sliding Window – Variable (Expand-Shrink)", probs:[
+              {id:"sw3",t:"Longest Substring Without Repeating Characters",n:3,d:"M"},
+              {id:"209",t:"Minimum Size Subarray Sum",n:209,d:"M"},
+              {id:"904",t:"Fruit Into Baskets",n:904,d:"M"},
+              {id:"1493",t:"Longest Subarray of 1s After Deleting One Element",n:1493,d:"M"},
+            ]},
+            { id:"sw-mono", label:"Sliding Window – Monotonic Window", probs:[
+              {id:"239",t:"Sliding Window Maximum",n:239,d:"H"},
+              {id:"862",t:"Shortest Subarray with Sum at Least K",n:862,d:"H"},
+            ]},
+            { id:"tp-opp", label:"Two Pointer – Opposite Ends", probs:[
+              {id:"167",t:"Two Sum II – Input Array Is Sorted",n:167,d:"M"},
+              {id:"11",t:"Container With Most Water",n:11,d:"M"},
+              {id:"15",t:"3Sum",n:15,d:"M"},
+              {id:"42",t:"Trapping Rain Water",n:42,d:"H"},
+            ]},
+            { id:"tp-same", label:"Two Pointer – Same Direction", probs:[
+              {id:"283",t:"Move Zeroes",n:283,d:"E"},
+              {id:"26",t:"Remove Duplicates from Sorted Array",n:26,d:"E"},
+              {id:"80",t:"Remove Duplicates from Sorted Array II",n:80,d:"M"},
+            ]},
+            { id:"tp-part", label:"Two Pointer – Partition / Dutch Flag", probs:[
+              {id:"75",t:"Sort Colors",n:75,d:"M"},
+              {id:"905",t:"Sort Array by Parity",n:905,d:"E"},
+            ]},
+            { id:"prefix-sum", label:"Prefix Sum", probs:[
+              {id:"303",t:"Range Sum Query – Immutable",n:303,d:"E"},
+              {id:"560",t:"Subarray Sum Equals K",n:560,d:"M"},
+              {id:"238",t:"Product of Array Except Self",n:238,d:"M"},
+              {id:"525",t:"Contiguous Array",n:525,d:"M"},
+            ]},
+            { id:"prefix-xor", label:"Prefix XOR", probs:[
+              {id:"136",t:"Single Number",n:136,d:"E"},
+              {id:"1310",t:"XOR Queries of a Subarray",n:1310,d:"M"},
+              {id:"1442",t:"Count Triplets That Can Form Two Arrays of Equal XOR",n:1442,d:"M"},
+            ]},
+            { id:"prefix-2d", label:"2D Prefix Sum", probs:[
+              {id:"304",t:"Range Sum Query 2D – Immutable",n:304,d:"M"},
+              {id:"1314",t:"Matrix Block Sum",n:1314,d:"M"},
+            ]},
+            { id:"kadane", label:"Kadane's – Max Subarray Sum", probs:[
+              {id:"53",t:"Maximum Subarray",n:53,d:"M"},
+              {id:"121",t:"Best Time to Buy and Sell Stock",n:121,d:"E"},
+              {id:"918",t:"Maximum Sum Circular Subarray",n:918,d:"M"},
+            ]},
+            { id:"max-prod", label:"Max Product Subarray", probs:[
+              {id:"152",t:"Maximum Product Subarray",n:152,d:"M"},
+              {id:"713",t:"Subarray Product Less Than K",n:713,d:"M"},
+            ]},
+            { id:"xor-sub", label:"Subarray with Given XOR / Sum", probs:[
+              {id:"974",t:"Subarray Sums Divisible by K",n:974,d:"M"},
+              {id:"1248",t:"Count Number of Nice Subarrays",n:1248,d:"M"},
+            ]},
+            { id:"bs-index", label:"Binary Search – On Index", probs:[
+              {id:"704",t:"Binary Search",n:704,d:"E"},
+              {id:"34",t:"Find First and Last Position in Sorted Array",n:34,d:"M"},
+              {id:"33",t:"Search in Rotated Sorted Array",n:33,d:"M"},
+              {id:"74",t:"Search a 2D Matrix",n:74,d:"M"},
+            ]},
+            { id:"bs-ans", label:"Binary Search – On Answer", probs:[
+              {id:"875",t:"Koko Eating Bananas",n:875,d:"M"},
+              {id:"1011",t:"Capacity to Ship Packages Within D Days",n:1011,d:"M"},
+              {id:"153",t:"Find Minimum in Rotated Sorted Array",n:153,d:"M"},
+              {id:"4",t:"Median of Two Sorted Arrays",n:4,d:"H"},
+            ]},
+          ]},
+          { id:"string", label:"Strings", color:"#8B44D4", sub:[
+            { id:"str-sw-rep", label:"Sliding Window – Longest Without Repeat", probs:[
+              {id:"str3",t:"Longest Substring Without Repeating Characters",n:3,d:"M"},
+              {id:"424",t:"Longest Repeating Character Replacement",n:424,d:"M"},
+            ]},
+            { id:"str-sw-min", label:"Sliding Window – Minimum Window Substring", probs:[
+              {id:"76",t:"Minimum Window Substring",n:76,d:"H"},
+            ]},
+            { id:"str-sw-ana", label:"Sliding Window – Anagram / Permutation", probs:[
+              {id:"str567",t:"Permutation in String",n:567,d:"M"},
+              {id:"str438",t:"Find All Anagrams in a String",n:438,d:"M"},
+            ]},
+            { id:"str-tp-pal", label:"Two Pointers – Palindrome Check", probs:[
+              {id:"125",t:"Valid Palindrome",n:125,d:"E"},
+              {id:"5",t:"Longest Palindromic Substring",n:5,d:"M"},
+              {id:"680",t:"Valid Palindrome II",n:680,d:"E"},
+            ]},
+            { id:"str-tp-rev", label:"Two Pointers – Reverse Words / Characters", probs:[
+              {id:"344",t:"Reverse String",n:344,d:"E"},
+              {id:"151",t:"Reverse Words in a String",n:151,d:"M"},
+            ]},
+            { id:"str-compress", label:"String Compression", probs:[
+              {id:"443",t:"String Compression",n:443,d:"M"},
+              {id:"38",t:"Count and Say",n:38,d:"M"},
+            ]},
+            { id:"str-kmp", label:"Pattern Matching – KMP", probs:[
+              {id:"28",t:"Find the Index of the First Occurrence in a String",n:28,d:"E"},
+              {id:"459",t:"Repeated Substring Pattern",n:459,d:"E"},
+              {id:"686",t:"Repeated String Match",n:686,d:"M"},
+            ]},
+            { id:"str-rk", label:"Pattern Matching – Rabin-Karp / Z-algo", probs:[
+              {id:"1392",t:"Longest Happy Prefix",n:1392,d:"H"},
+              {id:"796",t:"Rotate String",n:796,d:"E"},
+            ]},
+          ]},
+          { id:"hashmap", label:"Hash Map", color:"#0F8A5F", sub:[
+            { id:"hm-freq", label:"Frequency Based", probs:[
+              {id:"hm1",t:"Two Sum",n:1,d:"E"},
+              {id:"347",t:"Top K Frequent Elements",n:347,d:"M"},
+              {id:"451",t:"Sort Characters by Frequency",n:451,d:"M"},
+              {id:"383",t:"Ransom Note",n:383,d:"E"},
+            ]},
+            { id:"hm-lookup", label:"Lookup Based", probs:[
+              {id:"217",t:"Contains Duplicate",n:217,d:"E"},
+              {id:"290",t:"Word Pattern",n:290,d:"E"},
+              {id:"205",t:"Isomorphic Strings",n:205,d:"E"},
+            ]},
+            { id:"hm-set", label:"Set Based", probs:[
+              {id:"128",t:"Longest Consecutive Sequence",n:128,d:"M"},
+              {id:"202",t:"Happy Number",n:202,d:"E"},
+            ]},
+            { id:"hm-index", label:"Index Mapping", probs:[
+              {id:"41",t:"First Missing Positive",n:41,d:"H"},
+              {id:"442",t:"Find All Duplicates in an Array",n:442,d:"M"},
+              {id:"448",t:"Find All Numbers Disappeared in an Array",n:448,d:"E"},
+            ]},
+            { id:"hm-group", label:"Grouping Pattern", probs:[
+              {id:"49",t:"Group Anagrams",n:49,d:"M"},
+              {id:"760",t:"Find Anagram Mappings",n:760,d:"E"},
+            ]},
+          ]},
+          { id:"stack", label:"Stack", color:"#D4880B", sub:[
+            { id:"st-mono-inc", label:"Monotonic Stack – Increasing", probs:[
+              {id:"739",t:"Daily Temperatures",n:739,d:"M"},
+              {id:"907",t:"Sum of Subarray Minimums",n:907,d:"M"},
+              {id:"2104",t:"Sum of Subarray Ranges",n:2104,d:"M"},
+            ]},
+            { id:"st-mono-dec", label:"Monotonic Stack – Decreasing", probs:[
+              {id:"496",t:"Next Greater Element I",n:496,d:"E"},
+              {id:"503",t:"Next Greater Element II",n:503,d:"M"},
+            ]},
+            { id:"st-nearest", label:"Nearest Element", probs:[
+              {id:"901",t:"Online Stock Span",n:901,d:"M"},
+              {id:"1475",t:"Final Prices With a Special Discount in a Shop",n:1475,d:"E"},
+            ]},
+            { id:"st-minmax", label:"Min/Max Stack", probs:[
+              {id:"155",t:"Min Stack",n:155,d:"M"},
+            ]},
+            { id:"st-expr", label:"Expression Handling", probs:[
+              {id:"20",t:"Valid Parentheses",n:20,d:"E"},
+              {id:"150",t:"Evaluate Reverse Polish Notation",n:150,d:"M"},
+              {id:"227",t:"Basic Calculator II",n:227,d:"M"},
+              {id:"224",t:"Basic Calculator",n:224,d:"H"},
+            ]},
+            { id:"st-hist", label:"Histogram Pattern", probs:[
+              {id:"84",t:"Largest Rectangle in Histogram",n:84,d:"H"},
+              {id:"85",t:"Maximal Rectangle",n:85,d:"H"},
+            ]},
+          ]},
+          { id:"queue", label:"Queue / Deque", color:"#CC3D3D", sub:[
+            { id:"q-fifo", label:"FIFO Processing", probs:[
+              {id:"622",t:"Design Circular Queue",n:622,d:"M"},
+              {id:"933",t:"Number of Recent Calls",n:933,d:"E"},
+            ]},
+            { id:"q-level", label:"Level-wise Processing", probs:[
+              {id:"q102",t:"Binary Tree Level Order Traversal",n:102,d:"M"},
+              {id:"994",t:"Rotting Oranges",n:994,d:"M"},
+              {id:"286",t:"Walls and Gates",n:286,d:"M"},
+            ]},
+            { id:"q-circ", label:"Circular Queue Pattern", probs:[
+              {id:"1670",t:"Design Front Middle Back Queue",n:1670,d:"M"},
+              {id:"641",t:"Design Circular Deque",n:641,d:"M"},
+            ]},
+            { id:"q-deque", label:"Deque Based", probs:[
+              {id:"q239",t:"Sliding Window Maximum",n:239,d:"H"},
+              {id:"1696",t:"Jump Game VI",n:1696,d:"M"},
+            ]},
+          ]},
+          { id:"linkedlist", label:"Linked List", color:"#1A7A8C", sub:[
+            { id:"ll-fastslow", label:"Fast-Slow Pointers", probs:[
+              {id:"141",t:"Linked List Cycle",n:141,d:"E"},
+              {id:"876",t:"Middle of the Linked List",n:876,d:"E"},
+              {id:"234",t:"Palindrome Linked List",n:234,d:"E"},
+            ]},
+            { id:"ll-cycle", label:"Cycle Detection", probs:[
+              {id:"142",t:"Linked List Cycle II",n:142,d:"M"},
+              {id:"ll287",t:"Find the Duplicate Number",n:287,d:"M"},
+            ]},
+            { id:"ll-rev", label:"Full Reversal", probs:[
+              {id:"206",t:"Reverse Linked List",n:206,d:"E"},
+              {id:"92",t:"Reverse Linked List II",n:92,d:"M"},
+            ]},
+            { id:"ll-kgroup", label:"Partial Reversal (k-group)", probs:[
+              {id:"25",t:"Reverse Nodes in k-Group",n:25,d:"H"},
+              {id:"24",t:"Swap Nodes in Pairs",n:24,d:"M"},
+            ]},
+            { id:"ll-merge", label:"Merge Lists", probs:[
+              {id:"21",t:"Merge Two Sorted Lists",n:21,d:"E"},
+              {id:"ll23",t:"Merge k Sorted Lists",n:23,d:"H"},
+              {id:"148",t:"Sort List",n:148,d:"M"},
+            ]},
+          ]},
+          { id:"trees", label:"Trees", color:"#2D7D3A", sub:[
+            { id:"tr-dfs", label:"DFS – Pre / In / Post Order", probs:[
+              {id:"94",t:"Binary Tree Inorder Traversal",n:94,d:"E"},
+              {id:"144",t:"Binary Tree Preorder Traversal",n:144,d:"E"},
+              {id:"145",t:"Binary Tree Postorder Traversal",n:145,d:"E"},
+            ]},
+            { id:"tr-bfs", label:"BFS – Level Order / Zigzag / Right Side View", probs:[
+              {id:"tr102",t:"Binary Tree Level Order Traversal",n:102,d:"M"},
+              {id:"103",t:"Binary Tree Zigzag Level Order Traversal",n:103,d:"M"},
+              {id:"199",t:"Binary Tree Right Side View",n:199,d:"M"},
+            ]},
+            { id:"tr-topdown", label:"Recursion – Top Down", probs:[
+              {id:"104",t:"Maximum Depth of Binary Tree",n:104,d:"E"},
+              {id:"112",t:"Path Sum",n:112,d:"E"},
+              {id:"100",t:"Same Tree",n:100,d:"E"},
+              {id:"226",t:"Invert Binary Tree",n:226,d:"E"},
+            ]},
+            { id:"tr-bottomup", label:"Recursion – Bottom Up", probs:[
+              {id:"543",t:"Diameter of Binary Tree",n:543,d:"E"},
+              {id:"110",t:"Balanced Binary Tree",n:110,d:"E"},
+              {id:"1448",t:"Count Good Nodes in Binary Tree",n:1448,d:"M"},
+            ]},
+            { id:"tr-path", label:"Path Based – Max Path Sum / Diameter / Height", probs:[
+              {id:"124",t:"Binary Tree Maximum Path Sum",n:124,d:"H"},
+              {id:"129",t:"Sum Root to Leaf Numbers",n:129,d:"M"},
+              {id:"257",t:"Binary Tree Paths",n:257,d:"E"},
+            ]},
+            { id:"tr-bst", label:"BST (Binary Search Tree)", probs:[
+              {id:"98",t:"Validate Binary Search Tree",n:98,d:"M"},
+              {id:"230",t:"Kth Smallest Element in a BST",n:230,d:"M"},
+              {id:"235",t:"Lowest Common Ancestor of a BST",n:235,d:"M"},
+              {id:"450",t:"Delete Node in a BST",n:450,d:"M"},
+            ]},
+          ]},
+          { id:"recursion", label:"Recursion / Backtracking", color:"#A0522D", sub:[
+            { id:"bt-subsets", label:"Subsets (Power Set)", probs:[
+              {id:"78",t:"Subsets",n:78,d:"M"},
+              {id:"90",t:"Subsets II",n:90,d:"M"},
+            ]},
+            { id:"bt-perm", label:"Permutations", probs:[
+              {id:"46",t:"Permutations",n:46,d:"M"},
+              {id:"47",t:"Permutations II",n:47,d:"M"},
+            ]},
+            { id:"bt-comb", label:"Combinations (nCr)", probs:[
+              {id:"77",t:"Combinations",n:77,d:"M"},
+              {id:"39",t:"Combination Sum",n:39,d:"M"},
+              {id:"40",t:"Combination Sum II",n:40,d:"M"},
+            ]},
+            { id:"bt-word", label:"Word Search on Grid", probs:[
+              {id:"79",t:"Word Search",n:79,d:"M"},
+              {id:"212",t:"Word Search II",n:212,d:"H"},
+            ]},
+            { id:"bt-pal", label:"Palindrome Partitioning", probs:[
+              {id:"131",t:"Palindrome Partitioning",n:131,d:"M"},
+            ]},
+            { id:"bt-prune", label:"Pruning / State Tracking", probs:[
+              {id:"37",t:"Sudoku Solver",n:37,d:"H"},
+              {id:"51",t:"N-Queens",n:51,d:"H"},
+            ]},
+            { id:"dc-merge", label:"Divide & Conquer – Merge Sort Pattern", probs:[
+              {id:"912",t:"Sort an Array (Merge Sort)",n:912,d:"M"},
+              {id:"315",t:"Count of Smaller Numbers After Self",n:315,d:"H"},
+            ]},
+            { id:"dc-quick", label:"Divide & Conquer – Quick Select (Kth Largest)", probs:[
+              {id:"dc215",t:"Kth Largest Element in an Array",n:215,d:"M"},
+            ]},
+            { id:"dc-inv", label:"Divide & Conquer – Count Inversions", probs:[
+              {id:"493",t:"Reverse Pairs",n:493,d:"H"},
+            ]},
+          ]},
+          { id:"heap", label:"Heap", color:"#6B2FAA", sub:[
+            { id:"hp-topk", label:"Top K / Kth Element / K Closest Points", probs:[
+              {id:"hp215",t:"Kth Largest Element in an Array",n:215,d:"M"},
+              {id:"hp347",t:"Top K Frequent Elements",n:347,d:"M"},
+              {id:"hp973",t:"K Closest Points to Origin",n:973,d:"M"},
+              {id:"703",t:"Kth Largest Element in a Stream",n:703,d:"E"},
+            ]},
+            { id:"hp-greedy", label:"Greedy + Heap", probs:[
+              {id:"621",t:"Task Scheduler",n:621,d:"M"},
+              {id:"253",t:"Meeting Rooms II",n:253,d:"M"},
+              {id:"767",t:"Reorganize String",n:767,d:"M"},
+              {id:"1167",t:"Minimum Cost to Connect Sticks",n:1167,d:"M"},
+            ]},
+            { id:"hp-kmerge", label:"K-way Merge", probs:[
+              {id:"hp23",t:"Merge k Sorted Lists",n:23,d:"H"},
+              {id:"373",t:"Find K Pairs with Smallest Sums",n:373,d:"M"},
+              {id:"378",t:"Kth Smallest Element in a Sorted Matrix",n:378,d:"M"},
+            ]},
+          ]},
+          { id:"graphs", label:"Graphs", color:"#0C5E7A", sub:[
+            { id:"gr-bfs", label:"Graph BFS", probs:[
+              {id:"200",t:"Number of Islands",n:200,d:"M"},
+              {id:"gr994",t:"Rotting Oranges",n:994,d:"M"},
+              {id:"542",t:"01 Matrix",n:542,d:"M"},
+              {id:"417",t:"Pacific Atlantic Water Flow",n:417,d:"M"},
+            ]},
+            { id:"gr-dfs", label:"Graph DFS", probs:[
+              {id:"133",t:"Clone Graph",n:133,d:"M"},
+              {id:"130",t:"Surrounded Regions",n:130,d:"M"},
+              {id:"695",t:"Max Area of Island",n:695,d:"M"},
+            ]},
+            { id:"gr-cy-dir", label:"Cycle Detection – Directed", probs:[
+              {id:"207",t:"Course Schedule",n:207,d:"M"},
+              {id:"gr210",t:"Course Schedule II",n:210,d:"M"},
+            ]},
+            { id:"gr-cy-und", label:"Cycle Detection – Undirected", probs:[
+              {id:"684",t:"Redundant Connection",n:684,d:"M"},
+              {id:"261",t:"Graph Valid Tree",n:261,d:"M"},
+            ]},
+            { id:"gr-topo", label:"Topological Sort", probs:[
+              {id:"topo210",t:"Course Schedule II (Kahn's)",n:210,d:"M"},
+              {id:"269",t:"Alien Dictionary",n:269,d:"H"},
+              {id:"1203",t:"Sort Items by Groups Respecting Dependencies",n:1203,d:"H"},
+            ]},
+            { id:"gr-dijkstra", label:"Shortest Path – Dijkstra", probs:[
+              {id:"743",t:"Network Delay Time",n:743,d:"M"},
+              {id:"1631",t:"Path With Minimum Effort",n:1631,d:"M"},
+              {id:"787",t:"Cheapest Flights Within K Stops",n:787,d:"M"},
+            ]},
+            { id:"gr-bellman", label:"Shortest Path – Bellman-Ford", probs:[
+              {id:"bf743",t:"Network Delay Time (Bellman-Ford)",n:743,d:"M"},
+              {id:"bf787",t:"Cheapest Flights Within K Stops",n:787,d:"M"},
+            ]},
+            { id:"gr-floyd", label:"Shortest Path – Floyd-Warshall (All Pairs)", probs:[
+              {id:"1334",t:"Find the City With Smallest Number of Neighbors",n:1334,d:"M"},
+              {id:"399",t:"Evaluate Division",n:399,d:"M"},
+            ]},
+            { id:"gr-kruskal", label:"Spanning Tree – Kruskal", probs:[
+              {id:"1584",t:"Min Cost to Connect All Points",n:1584,d:"M"},
+              {id:"gr684",t:"Redundant Connection (Kruskal)",n:684,d:"M"},
+            ]},
+            { id:"gr-prim", label:"Spanning Tree – Prim's", probs:[
+              {id:"pr1584",t:"Min Cost to Connect All Points (Prim's)",n:1584,d:"M"},
+            ]},
+            { id:"gr-dsu", label:"Union-Find (DSU)", probs:[
+              {id:"721",t:"Accounts Merge",n:721,d:"M"},
+              {id:"dsu684",t:"Redundant Connection (DSU)",n:684,d:"M"},
+              {id:"990",t:"Satisfiability of Equality Equations",n:990,d:"M"},
+            ]},
+            { id:"gr-bip", label:"Bipartite / Multi-source BFS / 0-1 BFS", probs:[
+              {id:"785",t:"Is Graph Bipartite?",n:785,d:"M"},
+              {id:"ms542",t:"01 Matrix (Multi-source BFS)",n:542,d:"M"},
+              {id:"1091",t:"Shortest Path in Binary Matrix",n:1091,d:"M"},
+            ]},
+          ]},
+          { id:"trie", label:"Trie", color:"#7A3D0C", sub:[
+            { id:"tri-ins", label:"Insert / Search", probs:[
+              {id:"208",t:"Implement Trie (Prefix Tree)",n:208,d:"M"},
+              {id:"1268",t:"Search Suggestions System",n:1268,d:"M"},
+            ]},
+            { id:"tri-prefix", label:"Prefix Match", probs:[
+              {id:"648",t:"Replace Words",n:648,d:"M"},
+              {id:"720",t:"Longest Word in Dictionary",n:720,d:"M"},
+              {id:"211",t:"Design Add and Search Words Data Structure",n:211,d:"M"},
+            ]},
+            { id:"tri-bit", label:"Bitwise Trie", probs:[
+              {id:"421",t:"Maximum XOR of Two Numbers in an Array",n:421,d:"M"},
+            ]},
+          ]},
+          { id:"dp", label:"Dynamic Programming", color:"#0D6E5C", sub:[
+            { id:"dp-1d", label:"1D DP", probs:[
+              {id:"70",t:"Climbing Stairs",n:70,d:"E"},
+              {id:"198",t:"House Robber",n:198,d:"M"},
+              {id:"91",t:"Decode Ways",n:91,d:"M"},
+              {id:"dp322",t:"Coin Change",n:322,d:"M"},
+            ]},
+            { id:"dp-2d", label:"2D DP", probs:[
+              {id:"62",t:"Unique Paths",n:62,d:"M"},
+              {id:"1143",t:"Longest Common Subsequence",n:1143,d:"M"},
+              {id:"72",t:"Edit Distance",n:72,d:"M"},
+            ]},
+            { id:"dp-knap", label:"Knapsack Pattern", probs:[
+              {id:"416",t:"Partition Equal Subset Sum",n:416,d:"M"},
+              {id:"494",t:"Target Sum",n:494,d:"M"},
+              {id:"518",t:"Coin Change II",n:518,d:"M"},
+              {id:"474",t:"Ones and Zeroes",n:474,d:"M"},
+            ]},
+            { id:"dp-seq", label:"Sequence DP", probs:[
+              {id:"300",t:"Longest Increasing Subsequence",n:300,d:"M"},
+              {id:"354",t:"Russian Doll Envelopes",n:354,d:"H"},
+              {id:"673",t:"Number of Longest Increasing Subsequences",n:673,d:"M"},
+            ]},
+            { id:"dp-partition", label:"Partition DP", probs:[
+              {id:"139",t:"Word Break",n:139,d:"M"},
+              {id:"140",t:"Word Break II",n:140,d:"H"},
+            ]},
+            { id:"dp-interval", label:"Interval DP", probs:[
+              {id:"312",t:"Burst Balloons",n:312,d:"H"},
+              {id:"1039",t:"Minimum Score Triangulation of Polygon",n:1039,d:"M"},
+            ]},
+            { id:"dp-bitmask", label:"Bitmask DP", probs:[
+              {id:"847",t:"Shortest Path Visiting All Nodes",n:847,d:"H"},
+              {id:"1986",t:"Minimum Number of Work Sessions to Finish the Tasks",n:1986,d:"M"},
+            ]},
+            { id:"dp-digit", label:"Digit DP", probs:[
+              {id:"357",t:"Count Numbers with Unique Digits",n:357,d:"M"},
+              {id:"600",t:"Non-negative Integers without Consecutive Ones",n:600,d:"H"},
+            ]},
+            { id:"dp-tree", label:"DP on Trees", probs:[
+              {id:"337",t:"House Robber III",n:337,d:"M"},
+              {id:"968",t:"Binary Tree Cameras",n:968,d:"H"},
+            ]},
+          ]},
+          { id:"greedy", label:"Greedy", color:"#8C5E0A", sub:[
+            { id:"grdy-activity", label:"Interval Greedy – Activity Selection", probs:[
+              {id:"435",t:"Non-overlapping Intervals",n:435,d:"M"},
+              {id:"56",t:"Merge Intervals",n:56,d:"M"},
+              {id:"57",t:"Insert Interval",n:57,d:"M"},
+            ]},
+            { id:"grdy-sched", label:"Scheduling Greedy", probs:[
+              {id:"grdy621",t:"Task Scheduler",n:621,d:"M"},
+              {id:"1235",t:"Maximum Profit in Job Scheduling",n:1235,d:"H"},
+            ]},
+            { id:"grdy-res", label:"Resource Allocation – Minimum Platforms / Rooms", probs:[
+              {id:"grdy253",t:"Meeting Rooms II",n:253,d:"M"},
+              {id:"1094",t:"Car Pooling",n:1094,d:"M"},
+            ]},
+            { id:"grdy-jump", label:"Jump Game Pattern", probs:[
+              {id:"55",t:"Jump Game",n:55,d:"M"},
+              {id:"45",t:"Jump Game II",n:45,d:"M"},
+            ]},
+            { id:"grdy-huff", label:"Huffman / Merge Cost", probs:[
+              {id:"grdy1167",t:"Minimum Cost to Connect Sticks",n:1167,d:"M"},
+            ]},
+          ]},
+          { id:"bitmanip", label:"Bit Manipulation", color:"#2C4F7A", sub:[
+            { id:"bm-xor", label:"XOR Pattern", probs:[
+              {id:"bm136",t:"Single Number",n:136,d:"E"},
+              {id:"137",t:"Single Number II",n:137,d:"M"},
+              {id:"389",t:"Find the Difference",n:389,d:"E"},
+              {id:"268",t:"Missing Number",n:268,d:"E"},
+            ]},
+            { id:"bm-mask", label:"Bit Masking", probs:[
+              {id:"231",t:"Power of Two",n:231,d:"E"},
+              {id:"338",t:"Counting Bits",n:338,d:"E"},
+              {id:"190",t:"Reverse Bits",n:190,d:"E"},
+              {id:"191",t:"Number of 1 Bits (Hamming Weight)",n:191,d:"E"},
+            ]},
+            { id:"bm-subset", label:"Subset via Bits / Bit Checks / Prefix XOR", probs:[
+              {id:"bm78",t:"Subsets (Bitmask approach)",n:78,d:"M"},
+              {id:"1239",t:"Max Length of a Concatenated String with Unique Characters",n:1239,d:"M"},
+              {id:"260",t:"Single Number III",n:260,d:"M"},
+            ]},
+          ]},
+          { id:"sorting", label:"Sorting Algorithms", color:"#4A4A6A", sub:[
+            { id:"sort-comp", label:"Comparison-based Sorts (Bubble / Selection / Insertion / Merge / Quick)", probs:[
+              {id:"s912",t:"Sort an Array (Merge / Quick Sort)",n:912,d:"M"},
+              {id:"s148",t:"Sort List (Merge Sort)",n:148,d:"M"},
+              {id:"s215",t:"Kth Largest Element (Quick Select)",n:215,d:"M"},
+            ]},
+            { id:"sort-heap", label:"Heap Sort", probs:[
+              {id:"sh215",t:"Kth Largest Element in an Array",n:215,d:"M"},
+              {id:"shp347",t:"Top K Frequent Elements",n:347,d:"M"},
+            ]},
+            { id:"sort-linear", label:"Linear Sorts (Counting / Radix / Bucket)", probs:[
+              {id:"s75",t:"Sort Colors (Counting Sort / Dutch Flag)",n:75,d:"M"},
+              {id:"1122",t:"Relative Sort Array (Counting Sort)",n:1122,d:"E"},
+              {id:"164",t:"Maximum Gap (Radix / Bucket Sort)",n:164,d:"H"},
+            ]},
+            { id:"sort-custom", label:"Custom Sort Problems", probs:[
+              {id:"179",t:"Largest Number",n:179,d:"M"},
+              {id:"1636",t:"Sort Array by Increasing Frequency",n:1636,d:"E"},
+              {id:"969",t:"Pancake Sorting",n:969,d:"M"},
+            ]},
+          ]},
+          { id:"range", label:"Range Structures", color:"#3A0D6E", sub:[
+            { id:"rs-seg", label:"Segment Tree – Range Query", probs:[
+              {id:"307",t:"Range Sum Query – Mutable",n:307,d:"M"},
+              {id:"715",t:"Range Module",n:715,d:"H"},
+            ]},
+            { id:"rs-lazy", label:"Segment Tree – Lazy Propagation", probs:[
+              {id:"370",t:"Range Addition",n:370,d:"M"},
+              {id:"699",t:"Falling Squares",n:699,d:"H"},
+            ]},
+            { id:"rs-fen", label:"Fenwick Tree (BIT) – Prefix Query", probs:[
+              {id:"rs307",t:"Range Sum Query – Mutable (BIT)",n:307,d:"M"},
+              {id:"rs315",t:"Count of Smaller Numbers After Self",n:315,d:"H"},
+              {id:"rs493",t:"Reverse Pairs",n:493,d:"H"},
+            ]},
+          ]},
+        ];
+
+        const DIFF = {
+          E: { label:"Easy", bg:"var(--color-background-success)", color:"var(--color-text-success)" },
+          M: { label:"Medium", bg:"var(--color-background-warning)", color:"var(--color-text-warning)" },
+          H: { label:"Hard", bg:"var(--color-background-danger)", color:"var(--color-text-danger)" },
+        };
+
+        function toSlug(title) {
+          return title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+        }
+
+        function DSATracker() {
+          const [done, setDone] = useState({});
+          const [active, setActive] = useState("array");
+          const [closed, setClosed] = useState({});
+          const [loading, setLoading] = useState(true);
+          const [search, setSearch] = useState("");
+
+          useEffect(() => {
+            try {
+              const r = localStorage.getItem("dsa-tracker-v2");
+              if (r) setDone(JSON.parse(r));
+            } catch (e) {
+              console.error("Failed to load progress", e);
+            }
+            setLoading(false);
+          }, []);
+
+          const toggle = useCallback(async (pid) => {
+            setDone(prev => {
+              const next = { ...prev, [pid]: !prev[pid] };
+              localStorage.setItem("dsa-tracker-v2", JSON.stringify(next));
+              return next;
+            });
+          }, []);
+
+          const toggleSection = (sid) => setClosed(p => ({ ...p, [sid]: !p[sid] }));
+
+          const totalAll = useMemo(() => CATS.reduce((a, c) => a + c.sub.reduce((b, s) => b + s.probs.length, 0), 0), []);
+          const doneAll = Object.values(done).filter(Boolean).length;
+          const pctAll = totalAll ? Math.round(doneAll / totalAll * 100) : 0;
+
+          const catStats = (cat) => {
+            const total = cat.sub.reduce((a, s) => a + s.probs.length, 0);
+            const d = cat.sub.reduce((a, s) => a + s.probs.filter(p => done[p.id]).length, 0);
+            return { total, done: d, pct: total ? Math.round(d / total * 100) : 0 };
+          };
+
+          const activeCat = CATS.find(c => c.id === active);
+          const acs = catStats(activeCat);
+
+          const searchLower = search.toLowerCase();
+          const filteredSubs = activeCat.sub.map(sub => ({
+            ...sub,
+            probs: search ? sub.probs.filter(p => p.t.toLowerCase().includes(searchLower) || String(p.n).includes(search)) : sub.probs
+          })).filter(sub => sub.probs.length > 0);
+
+          if (loading) return (
+            <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100%",color:"var(--color-text-secondary)",fontSize:"14px"}}>
+              Loading your progress...
+            </div>
+          );
+
+          return (
+            <div style={{display:"flex",height:"100vh",overflow:"hidden",background:"var(--color-background-primary)"}}>
+
+              {/* Sidebar */}
+              <div style={{
+                width:"240px",flexShrink:0,
+                borderRight:"0.5px solid var(--color-border-tertiary)",
+                overflowY:"auto",display:"flex",flexDirection:"column",
+                background: "var(--color-background-secondary)"
+              }}>
+                {/* Header */}
+                <div style={{padding:"1.5rem 1.25rem", borderBottom:"0.5px solid var(--color-border-tertiary)"}}>
+                  <div style={{fontSize:"16px",fontWeight:600,color:"var(--color-text-primary)",marginBottom:"12px"}}>DSA Mastery</div>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:"8px"}}>
+                    <span style={{fontSize:"12px",color:"var(--color-text-secondary)"}}>Overall Progress</span>
+                    <span style={{fontSize:"12px",fontWeight:600,color:"var(--color-text-primary)"}}>{doneAll}/{totalAll}</span>
+                  </div>
+                  <div style={{height:"6px",background:"var(--color-background-tertiary)",borderRadius:"3px",overflow:"hidden"}}>
+                    <div style={{height:"100%",background:"#22c55e",borderRadius:"3px",width:`${pctAll}%`,transition:"width 0.6s cubic-bezier(0.4, 0, 0.2, 1)"}}/>
+                  </div>
+                  <div style={{fontSize:"11px",color:"var(--color-text-tertiary)",marginTop:"6px"}}>{pctAll}% of total completed</div>
+                </div>
+
+                {/* Category list */}
+                <div style={{flex:1,overflowY:"auto",padding:"8px 0"}}>
+                  {CATS.map(cat => {
+                    const s = catStats(cat);
+                    const isActive = active === cat.id;
+                    return (
+                      <button key={cat.id} onClick={() => setActive(cat.id)} style={{
+                        display:"block",width:"100%",textAlign:"left",
+                        padding:"10px 16px",border:"none",cursor:"pointer",
+                        background: isActive ? "var(--color-background-tertiary)" : "transparent",
+                        borderLeft:`4px solid ${isActive ? cat.color : "transparent"}`,
+                        transition:"all 0.2s",
+                        outline: "none"
+                      }}>
+                        <div style={{fontSize:"14px",color: isActive ? "white" : "var(--color-text-secondary)",fontWeight:isActive?600:400,lineHeight:1.3}}>{cat.label}</div>
+                        <div style={{display:"flex",alignItems:"center",gap:"8px",marginTop:"6px"}}>
+                          <div style={{flex:1,height:"4px",background: isActive ? "rgba(255,255,255,0.05)" : "var(--color-background-tertiary)",borderRadius:"2px"}}>
+                            <div style={{height:"100%",background:cat.color,borderRadius:"2px",width:`${s.pct}%`,opacity: isActive ? 1 : 0.6}}/>
+                          </div>
+                          <span style={{fontSize:"11px",color:"var(--color-text-tertiary)",flexShrink:0}}>{s.done}/{s.total}</span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Main content */}
+              <div style={{flex:1,overflowY:"auto",display:"flex",flexDirection:"column"}}>
+                {/* Content header */}
+                <div style={{
+                  padding:"1.25rem 2rem",
+                  borderBottom:"0.5px solid var(--color-border-tertiary)",
+                  display:"flex",alignItems:"center",gap:"16px",
+                  position:"sticky",top:0,
+                  background:"rgba(10, 10, 12, 0.8)",
+                  backdropFilter: "blur(12px)",
+                  zIndex:10,
+                }}>
+                  <div style={{width:"12px",height:"12px",borderRadius:"50%",background:activeCat.color,flexShrink:0, boxShadow: `0 0 10px ${activeCat.color}44`}}/>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:"18px",fontWeight:600,color:"var(--color-text-primary)"}}>{activeCat.label}</div>
+                    <div style={{fontSize:"12px",color:"var(--color-text-secondary)"}}>{acs.done} of {acs.total} problems conquered · {acs.pct}% completion</div>
+                  </div>
+                  <div style={{position:"relative"}}>
+                    <input
+                      type="text"
+                      placeholder="Filter problems..."
+                      value={search}
+                      onChange={e => setSearch(e.target.value)}
+                      style={{
+                        padding:"8px 14px",paddingLeft:"36px",fontSize:"13px",
+                        border:"1px solid var(--color-border-primary)",
+                        borderRadius:"var(--border-radius-md)",
+                        background:"var(--color-background-secondary)",
+                        color:"var(--color-text-primary)",
+                        outline:"none",width:"240px",
+                      }}
+                    />
+                    <svg style={{position:"absolute", left:"12px", top:"50%", transform:"translateY(-50%)", width:"16px", height:"16px", color:"var(--color-text-tertiary)"}} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                </div>
+
+                {/* Subtopics */}
+                <div style={{padding:"1.5rem 2rem",maxWidth:"1000px"}}>
+                  {filteredSubs.length === 0 && (
+                    <div style={{color:"var(--color-text-tertiary)",fontSize:"14px",padding:"4rem 0",textAlign:"center"}}>
+                        <div style={{fontSize:"32px", marginBottom:"16px"}}>🔍</div>
+                        No problems match your current filter.
+                    </div>
+                  )}
+                  {filteredSubs.map(sub => {
+                    const subDone = sub.probs.filter(p => done[p.id]).length;
+                    const isOpen = !closed[sub.id];
+                    return (
+                      <div key={sub.id} className="fade-in" style={{
+                        marginBottom:"16px",
+                        background:"var(--color-background-secondary)",
+                        border:"1px solid var(--color-border-tertiary)",
+                        borderRadius:"var(--border-radius-lg)",
+                        overflow:"hidden",
+                        transition: "transform 0.2s ease"
+                      }}>
+                        <button
+                          onClick={() => toggleSection(sub.id)}
+                          style={{
+                            display:"flex",alignItems:"center",width:"100%",
+                            padding:"12px 20px",border:"none",cursor:"pointer",gap:"14px",
+                            background:"transparent",
+                            outline: "none"
+                          }}
+                        >
+                          <span style={{
+                            display:"inline-flex",alignItems:"center",justifyContent:"center",
+                            width:"24px",height:"24px",borderRadius:"50%",flexShrink:0,
+                            fontSize:"11px",fontWeight:600,
+                            background: subDone === sub.probs.length && sub.probs.length > 0 ? "#22c55e22" : "var(--color-background-tertiary)",
+                            color: subDone === sub.probs.length && sub.probs.length > 0 ? "#34d399" : "var(--color-text-secondary)",
+                            border: subDone === sub.probs.length && sub.probs.length > 0 ? "1px solid #22c55e44" : "1px solid transparent",
+                          }}>
+                            {subDone === sub.probs.length && sub.probs.length > 0 ? "✓" : subDone}
+                          </span>
+                          <span style={{flex:1,fontSize:"14px",fontWeight:600,color:"var(--color-text-primary)",textAlign:"left",lineHeight:1.3}}>{sub.label}</span>
+                          <span style={{fontSize:"12px",color:"var(--color-text-tertiary)",flexShrink:0, fontWeight:500}}>
+                            {subDone}/{sub.probs.length}
+                          </span>
+                          <span style={{fontSize:"10px",color:"var(--color-text-tertiary)",flexShrink:0, transform: isOpen ? "rotate(0deg)" : "rotate(180deg)", transition: "transform 0.3s"}}>▲</span>
+                        </button>
+
+                        {isOpen && (
+                          <div style={{borderTop:"1px solid var(--color-border-tertiary)"}}>
+                            {sub.probs.map((prob, i) => {
+                              const dc = DIFF[prob.d];
+                              const isDone = !!done[prob.id];
+                              return (
+                                <div
+                                  key={prob.id}
+                                  onClick={() => toggle(prob.id)}
+                                  style={{
+                                    display:"flex",alignItems:"center",gap:"14px",
+                                    padding:"12px 20px",cursor:"pointer",
+                                    background: isDone ? "rgba(34, 197, 94, 0.03)" : "transparent",
+                                    borderBottom: i < sub.probs.length-1 ? "1px solid var(--color-border-tertiary)" : "none",
+                                    transition:"background 0.15s",
+                                  }}
+                                  onMouseEnter={(e) => e.currentTarget.style.background = isDone ? "rgba(34, 197, 94, 0.05)" : "var(--color-background-tertiary)"}
+                                  onMouseLeave={(e) => e.currentTarget.style.background = isDone ? "rgba(34, 197, 94, 0.03)" : "transparent"}
+                                >
+                                  <div style={{
+                                    width:"20px",height:"20px",borderRadius:"6px",flexShrink:0,
+                                    border: isDone ? "none" : "2px solid var(--color-border-secondary)",
+                                    background: isDone ? "#22c55e" : "transparent",
+                                    display:"flex",alignItems:"center",justifyContent:"center",
+                                    transition:"all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                                    transform: isDone ? "scale(1.05)" : "scale(1)"
+                                  }}>
+                                    {isDone && <span style={{color:"white",fontSize:"12px",fontWeight:"bold"}}>✓</span>}
+                                  </div>
+
+                                  <span style={{
+                                    flex:1,fontSize:"14px",
+                                    color: isDone ? "var(--color-text-tertiary)" : "var(--color-text-primary)",
+                                    textDecoration: isDone ? "line-through" : "none",
+                                    lineHeight:1.4,
+                                    fontWeight: isDone ? 400 : 500
+                                  }}>{prob.t}</span>
+
+                                  <a
+                                    href={`https://leetcode.com/problems/${toSlug(prob.t)}/`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={e => e.stopPropagation()}
+                                    style={{
+                                      fontSize:"12px",color:"#f89f1b",fontWeight:600,
+                                      textDecoration:"none",flexShrink:0,
+                                      padding:"4px 8px",borderRadius:"6px",
+                                      background:"rgba(248, 159, 27, 0.1)",
+                                      transition: "all 0.2s"
+                                    }}
+                                    onMouseEnter={e => e.currentTarget.style.background = "rgba(248, 159, 27, 0.2)"}
+                                    onMouseLeave={e => e.currentTarget.style.background = "rgba(248, 159, 27, 0.1)"}
+                                  >#{prob.n}</a>
+
+                                  <span style={{
+                                    fontSize:"11px",fontWeight:600,
+                                    padding:"3px 10px",borderRadius:"20px",
+                                    background:dc.bg,color:dc.color,
+                                    flexShrink:0,minWidth:"60px",textAlign:"center",
+                                    letterSpacing: "0.02em"
+                                  }}>{dc.label}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<DSATracker />);
+    </script>
+</body>
+</html>
